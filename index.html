@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Asignaciones Semanales</title>
+  <!-- Tailwind CSS para diseño fácil y rápido -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Cliente oficial de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen p-4 md:p-8">
+
+  <div class="max-w-4xl mx-auto space-y-6">
+    <!-- Encabezado -->
+    <header class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Rotación de Asignaciones</h1>
+        <p class="text-sm text-slate-500">Gestión de puestos para Jueves y Sábados</p>
+      </div>
+      <span class="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-full">
+        Conectado a Supabase
+      </span>
+    </header>
+
+    <!-- Módulo 1: Registrar nueva persona -->
+    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <h2 class="text-lg font-bold text-slate-900 mb-4">Agregar Integrante</h2>
+      <form id="form-persona" class="flex flex-col sm:flex-row gap-4">
+        <input 
+          type="text" 
+          id="nombre-persona" 
+          placeholder="Nombre completo" 
+          class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        >
+        <select 
+          id="categoria-persona" 
+          class="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="publicador">Publicador</option>
+          <option value="anciano">Anciano</option>
+        </select>
+        <button 
+          type="submit" 
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
+        >
+          Guardar
+        </button>
+      </form>
+    </section>
+
+    <!-- Módulo 2: Lista de Integrantes -->
+    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <h2 class="text-lg font-bold text-slate-900 mb-4">Lista de Integrantes</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-slate-200 text-slate-500 text-sm">
+              <th class="py-2 px-3">Nombre</th>
+              <th class="py-2 px-3">Categoría</th>
+              <th class="py-2 px-3">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-personas" class="divide-y divide-slate-100 text-sm">
+            <!-- Los registros se cargan dinámicamente desde Supabase -->
+            <tr>
+              <td colspan="3" class="py-4 text-center text-slate-400">Cargando personas...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- Archivos de JS -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
