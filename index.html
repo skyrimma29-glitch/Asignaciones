@@ -3,77 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Asignaciones Semanales</title>
-  <!-- Tailwind CSS para diseño fácil y rápido -->
+  <title>Sistema de Asignaciones - Congregación Alameda</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Cliente oficial de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen p-4 md:p-8">
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
 
-  <div class="max-w-4xl mx-auto space-y-6">
-    <!-- Encabezado -->
-    <header class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+  <!-- VISTA DE LOGIN (Se oculta al iniciar sesión) -->
+  <div id="login-view" class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-md border border-slate-200 max-w-md w-full text-center space-y-6">
+      <h1 class="text-2xl font-bold text-slate-900">Asignaciones Alameda</h1>
+      <p class="text-sm text-slate-500">Inicia sesión con tu cuenta de Google para acceder al sistema de gestión y rotación.</p>
+      <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-300 rounded-xl hover:bg-slate-50 font-medium transition shadow-sm">
+        <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.19v3.15C3.21 21.34 7.32 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.6H1.19C.43 8.13 0 9.87 0 11.75s.43 3.62 1.19 5.15l4.08-2.66z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.32 0 3.21 2.66 1.19 6.6l4.08 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/></svg>
+        Continuar con Google
+      </button>
+    </div>
+  </div>
+
+  <!-- APLICACIÓN PRINCIPAL (Oculta hasta autenticarse) -->
+  <div id="app-view" class="hidden max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+    
+    <!-- Encabezado y Selector de Vistas -->
+    <header class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900">Rotación de Asignaciones</h1>
-        <p class="text-sm text-slate-500">Gestión de puestos para Jueves y Sábados</p>
+        <h1 class="text-2xl font-bold text-slate-900">Programa de Asignaciones</h1>
+        <p class="text-sm text-slate-500">Congregación Alameda</p>
       </div>
-      <span class="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-full">
-        Conectado a Supabase
-      </span>
+      <div class="flex items-center gap-3">
+        <select id="filtro-vista" class="px-4 py-2 border border-slate-300 rounded-xl text-sm font-medium bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="ambas">Ver Ambas Tablas</option>
+          <option value="alameda">Programa Congregación Alameda</option>
+          <option value="atalaya">Reunión Pública y Estudio de la Atalaya</option>
+        </select>
+        <button id="btn-logout" class="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl font-medium transition">Salir</button>
+      </div>
     </header>
 
-    <!-- Módulo 1: Registrar nueva persona -->
-    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-      <h2 class="text-lg font-bold text-slate-900 mb-4">Agregar Integrante</h2>
-      <form id="form-persona" class="flex flex-col sm:flex-row gap-4">
-        <input 
-          type="text" 
-          id="nombre-persona" 
-          placeholder="Nombre completo" 
-          class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-        >
-        <select 
-          id="categoria-persona" 
-          class="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="publicador">Publicador</option>
-          <option value="anciano">Anciano</option>
-        </select>
-        <button 
-          type="submit" 
-          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
-        >
-          Guardar
-        </button>
-      </form>
+    <!-- MÓDULO: Generador Mes a Mes -->
+    <section class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-center gap-4">
+      <div>
+        <h2 class="text-lg font-bold">Generador Automático de Asignaciones</h2>
+        <p class="text-sm text-blue-100">Crea el programa del mes rotando equitativamente y evitando repeticiones.</p>
+      </div>
+      <button onclick="generarMesAutomatico()" class="px-6 py-3 bg-white text-blue-600 hover:bg-blue-50 font-bold rounded-xl shadow transition">
+        Generar Nuevo Mes
+      </button>
     </section>
 
-    <!-- Módulo 2: Lista de Integrantes -->
-    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-      <h2 class="text-lg font-bold text-slate-900 mb-4">Lista de Integrantes</h2>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+    <!-- TABLAS DE ASIGNACIONES -->
+    <div id="seccion-alameda" class="space-y-4">
+      <h3 class="text-xl font-bold text-slate-800">Programa de Asignaciones Congregación Alameda</h3>
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
           <thead>
-            <tr class="border-b border-slate-200 text-slate-500 text-sm">
-              <th class="py-2 px-3">Nombre</th>
-              <th class="py-2 px-3">Categoría</th>
-              <th class="py-2 px-3">Estado</th>
+            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500">
+              <th class="py-3 px-4">Fecha</th>
+              <th class="py-3 px-4">Acomodadores</th>
+              <th class="py-3 px-4">Microfonistas</th>
+              <th class="py-3 px-4">Audio & Video Zoom</th>
+              <th class="py-3 px-4">Plataforma</th>
+              <th class="py-3 px-4">Limpieza Salón</th>
             </tr>
           </thead>
-          <tbody id="tabla-personas" class="divide-y divide-slate-100 text-sm">
-            <!-- Los registros se cargan dinámicamente desde Supabase -->
-            <tr>
-              <td colspan="3" class="py-4 text-center text-slate-400">Cargando personas...</td>
+          <tbody id="tabla-alameda-body" class="divide-y divide-slate-100">
+            <!-- Dinámico -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="seccion-atalaya" class="space-y-4">
+      <h3 class="text-xl font-bold text-slate-800">Reunión Pública y Estudio de la Atalaya</h3>
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500">
+              <th class="py-3 px-4">Fecha</th>
+              <th class="py-3 px-4">Presidente</th>
+              <th class="py-3 px-4">Orador</th>
+              <th class="py-3 px-4">Discurso Público</th>
+              <th class="py-3 px-4">Lector</th>
+              <th class="py-3 px-4">Oración Final</th>
             </tr>
+          </thead>
+          <tbody id="tabla-atalaya-body" class="divide-y divide-slate-100">
+            <!-- Dinámico -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GESTIÓN DE INTEGRANTES (CRUD con Modales) -->
+    <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+      <h3 class="text-lg font-bold text-slate-900">Gestión de Integrantes</h3>
+      <form id="form-persona" class="flex flex-col sm:flex-row gap-3">
+        <input type="text" id="nombre-persona" placeholder="Nombre completo" class="flex-1 px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500" required>
+        <select id="categoria-persona" class="px-4 py-2 border border-slate-300 rounded-xl">
+          <option value="publicador">Publicador Bautizado</option>
+          <option value="anciano">Anciano</option>
+        </select>
+        <button type="submit" class="px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl transition">Agregar</button>
+      </form>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 text-slate-500">
+              <th class="py-2 px-3">Nombre</th>
+              <th class="py-2 px-3">Categoría</th>
+              <th class="py-2 px-3 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-personas" class="divide-y divide-slate-100">
+            <!-- Dinámico -->
           </tbody>
         </table>
       </div>
     </section>
+
   </div>
 
-  <!-- Archivos de JS -->
+  <!-- MODAL DE EDITAR / ADVERTENCIA ELIMINAR -->
+  <div id="modal-editar" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center p-4">
+    <div class="bg-white p-6 rounded-2xl max-w-md w-full space-y-4 shadow-xl">
+      <h3 class="text-lg font-bold text-slate-900">Editar Integrante</h3>
+      <input type="hidden" id="edit-id">
+      <input type="text" id="edit-nombre" class="w-full px-4 py-2 border border-slate-300 rounded-xl">
+      <select id="edit-categoria" class="w-full px-4 py-2 border border-slate-300 rounded-xl">
+        <option value="publicador">Publicador Bautizado</option>
+        <option value="anciano">Anciano</option>
+      </select>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="cerrarModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-medium">Cancelar</button>
+        <button onclick="guardarEdicion()" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-medium">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
