@@ -83,7 +83,55 @@ $('btn-login-google').addEventListener('click', async () => {
   if (error) aviso('No se pudo iniciar sesión: ' + error.message, true);
 });
 
-const cerrarSesion = () => supabaseClient.auth.signOut();
+// Botón oficial de Google: la ventana de Google muestra el dominio de esta página
+// (no el de Supabase). Si no carga, se usa el botón anterior como respaldo.
+let botonGooglePreparado = false;
+
+async function sha256Hex(texto) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function prepararBotonGoogle() {
+  if (botonGooglePreparado) return;
+  botonGooglePreparado = true;
+
+  // Espera hasta 6 s a que cargue la librería de Google
+  for (let i = 0; i < 30 && !(window.google && google.accounts && google.accounts.id); i++) {
+    await new Promise(r => setTimeout(r, 200));
+  }
+  const disponible = window.google && google.accounts && google.accounts.id
+    && typeof GOOGLE_CLIENT_ID !== 'undefined' && GOOGLE_CLIENT_ID && window.isSecureContext;
+  if (!disponible) {
+    $('btn-login-google').classList.remove('hidden');
+    return;
+  }
+
+  const nonce = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join('');
+  const nonceHash = await sha256Hex(nonce);
+
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    nonce: nonceHash,
+    callback: async respuesta => {
+      const { error } = await supabaseClient.auth.signInWithIdToken({
+        provider: 'google',
+        token: respuesta.credential,
+        nonce
+      });
+      if (error) aviso('No se pudo iniciar sesión: ' + error.message, true);
+    }
+  });
+  google.accounts.id.renderButton($('google-btn'), {
+    theme: 'outline', size: 'large', shape: 'pill',
+    text: 'continue_with', locale: 'es', width: 300
+  });
+}
+
+const cerrarSesion = () => {
+  if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
+  return supabaseClient.auth.signOut();
+};
 $('btn-logout').addEventListener('click', cerrarSesion);
 $('btn-logout-noauth').addEventListener('click', cerrarSesion);
 
@@ -93,7 +141,7 @@ supabaseClient.auth.onAuthStateChange((_evento, session) => {
 });
 
 async function manejarSesion(session) {
-  if (!session) { sesionIniciada = false; mostrarVista('login'); return; }
+  if (!session) { sesionIniciada = false; mostrarVista('login'); prepararBotonGoogle(); return; }
   if (sesionIniciada) return;
 
   // La política RLS solo deja ver la fila del propio correo
